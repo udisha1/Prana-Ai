@@ -224,7 +224,9 @@ def handle_agent():
     try:
         reply = asyncio.run(run_workflow())
     except Exception as e:
-        app.logger.warning(f"Live agent execution failed ({type(e).__name__}). Falling back to Mock Mode.")
+        import traceback
+        app.logger.error(f"Live agent execution failed ({type(e).__name__}): {e}. Falling back to Mock Mode.")
+        traceback.print_exc()
         
         # Switch session to Mock Mode for subsequent turns
         session_data["is_mock"] = True
@@ -537,6 +539,7 @@ def log_recipe_meal():
     data = request.get_json() or {}
     date_str = data.get("date")
     recipe_id = data.get("recipe_id")
+    local_time = data.get("local_time")
     
     if not date_str or not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
         return jsonify({"error": "Invalid or missing 'date' parameter."}), 400
@@ -583,11 +586,14 @@ def log_recipe_meal():
     if "meals" not in history[date_str]:
         history[date_str]["meals"] = []
         
-    from datetime import datetime
+    if not local_time:
+        from datetime import datetime
+        local_time = datetime.utcnow().strftime("%H:%M")
+        
     log_entry = {
         "recipe_id": recipe_id,
         "name": recipe_name,
-        "logged_at": datetime.utcnow().strftime("%H:%M")
+        "logged_at": local_time
     }
     history[date_str]["meals"].append(log_entry)
     
@@ -717,6 +723,22 @@ def generate_pdf(username, session_data):
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     
+    # Helper to check page bounds and draw footer/new page headers
+    def check_page_break(y_val, height_needed=20):
+        if y_val - height_needed < 80:
+            # Draw disclaimer at bottom of current page before breaking
+            p.setFont("Helvetica-Oblique", 9)
+            p.setFillColorRGB(0.6, 0.6, 0.6)
+            p.drawString(50, 60, "PranaAI Traditional Ayurvedic Guidance Disclaimer")
+            p.showPage()
+            
+            # Reset page drawing style for the new page
+            p.setFont("Helvetica", 11)
+            p.setStrokeColorRGB(0.2, 0.56, 0.38)
+            p.setFillColorRGB(0.0, 0.0, 0.0)
+            return 750
+        return y_val
+
     # Title
     p.setFont("Helvetica-Bold", 24)
     p.drawString(50, 750, "PranaAI Weekly Wellness Report")
@@ -735,7 +757,7 @@ def generate_pdf(username, session_data):
     p.setFont("Helvetica-Bold", 16)
     p.drawString(50, 680, "1. Dosha Profile")
     
-    dosha_state = session_data.get("dosha_state", {})
+    dosha_state = session_data.get("dosha_state") or {}
     dominant_dosha = dosha_state.get("dominant_dosha", "N/A")
     constitution = dosha_state.get("constitution_breakdown", {})
     reasoning = dosha_state.get("reasoning", "")
@@ -752,6 +774,7 @@ def generate_pdf(username, session_data):
         y -= 16
         
     y -= 10
+    y = check_page_break(y, 30)
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "2. Clinical Reasoning & Context")
     y -= 20
@@ -771,11 +794,13 @@ def generate_pdf(username, session_data):
         reasoning_lines.append(current_line)
         
     for line in reasoning_lines:
+        y = check_page_break(y, 16)
+        p.setFont("Helvetica-Oblique", 11)
         p.drawString(60, y, line)
         y -= 16
         
     # Load knowledge base guidelines
-    y -= 15
+    y = check_page_break(y, 35)
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "3. Recommended Diet & Lifestyle Guidelines")
     y -= 20
@@ -786,16 +811,15 @@ def generate_pdf(username, session_data):
         if not matching_doshas:
             matching_doshas = ["Vata"] # fallback
             
-        p.setFont("Helvetica", 11)
         for d in matching_doshas:
             guidance = kb["doshas"][d]["guidance"]
             charac = kb["doshas"][d]["characteristics"]
             
+            y = check_page_break(y, 30)
             p.setFont("Helvetica-Bold", 11)
             p.drawString(60, y, f"[{d} Balancing Guidelines]")
             y -= 18
             
-            p.setFont("Helvetica", 11)
             # Wrap guidance
             words = guidance.split(" ")
             current_line = ""
@@ -803,30 +827,38 @@ def generate_pdf(username, session_data):
                 if len(current_line + " " + w) < 90:
                     current_line += (" " if current_line else "") + w
                 else:
+                    y = check_page_break(y, 16)
+                    p.setFont("Helvetica", 11)
                     p.drawString(70, y, current_line)
                     y -= 16
                     current_line = w
             if current_line:
+                y = check_page_break(y, 16)
+                p.setFont("Helvetica", 11)
                 p.drawString(70, y, current_line)
                 y -= 16
                 
             y -= 10
             # Wrap characteristics
-            p.setFont("Helvetica-Oblique", 10)
             words = charac.split(" ")
             current_line = ""
             for w in words:
                 if len(current_line + " " + w) < 95:
                     current_line += (" " if current_line else "") + w
                 else:
+                    y = check_page_break(y, 14)
+                    p.setFont("Helvetica-Oblique", 10)
                     p.drawString(70, y, current_line)
                     y -= 14
                     current_line = w
             if current_line:
+                y = check_page_break(y, 14)
+                p.setFont("Helvetica-Oblique", 10)
                 p.drawString(70, y, current_line)
                 y -= 14
             y -= 15
     except Exception as e:
+        y = check_page_break(y, 16)
         p.drawString(60, y, "Unable to load detailed guidelines from database.")
         y -= 16
         

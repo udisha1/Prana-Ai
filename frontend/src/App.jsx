@@ -200,7 +200,8 @@ function App() {
         },
         body: JSON.stringify({
           date: trackerDate,
-          recipe_id: recipeId
+          recipe_id: recipeId,
+          local_time: mockEntry.logged_at
         })
       });
       if (response.status === 401) {

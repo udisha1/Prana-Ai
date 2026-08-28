@@ -27,19 +27,83 @@ def sanitize_input(text: str) -> str:
 
 # Delay nodes to prevent "429 Resource Exhausted" API errors by introducing spacing between rapid LLM transitions
 async def delay_prakriti(node_input: Any) -> Any:
-    await asyncio.sleep(2.5)
+    await asyncio.sleep(0.1)
     return node_input
 
 async def delay_knowledge(node_input: Any) -> Any:
-    await asyncio.sleep(2.5)
+    await asyncio.sleep(0.1)
     return node_input
 
 async def delay_recommendation(node_input: Any) -> Any:
-    await asyncio.sleep(2.5)
+    await asyncio.sleep(0.1)
     return node_input
 
 async def delay_safety(node_input: Any) -> Any:
-    await asyncio.sleep(2.5)
+    await asyncio.sleep(0.1)
+    return node_input
+
+# List of red flags to check in the user's message
+RED_FLAGS = [
+    "chest pain",
+    "difficulty breathing", "breathing difficulty", "shortness of breath",
+    "severe bleeding", "bleeding heavily",
+    "loss of consciousness", "passed out", "unconscious",
+    "sudden numbness", "numbness",
+    "sudden weakness", "weakness",
+    "difficulty speaking", "speech difficulty",
+    "sudden severe headache", "severe headache",
+    "stiff neck",
+    "severe abdominal pain", "severe stomach pain",
+    "self-harm", "suicid",
+    "swallowing difficulty",
+    "severe allergic reaction", "allergic reaction"
+]
+
+def intake_router(ctx, node_input) -> Any:
+    # 1. Check for red flags in the user's latest message
+    try:
+        try:
+            import api.database as database
+        except ImportError:
+            import database
+        
+        username = ctx.user_id
+        session_data = database.get_user_session(username)
+        if session_data and session_data.get("messages"):
+            latest_message = session_data["messages"][-1].lower().strip()
+            
+            has_red_flag = False
+            for flag in RED_FLAGS:
+                if flag in latest_message:
+                    has_red_flag = True
+                    break
+            
+            if has_red_flag:
+                ctx.route = "route_safety"
+                return node_input
+    except Exception as e:
+        # Fallback to checking the input text itself
+        pass
+        
+    # 2. Check if the intake is complete by looking at the output from intake_agent
+    text = ""
+    if isinstance(node_input, str):
+        text = node_input
+    elif hasattr(node_input, "parts") and node_input.parts:
+        text = "".join(p.text for p in node_input.parts if p.text)
+    elif isinstance(node_input, dict):
+        text = json.dumps(node_input)
+    else:
+        text = str(node_input)
+        
+    text_lower = text.lower()
+    is_complete = "symptoms" in text_lower and "lifestyle" in text_lower and ("duration" in text_lower or "age_range" in text_lower)
+    
+    if is_complete:
+        ctx.route = "route_prakriti"
+    else:
+        ctx.route = "route_exit"
+        
     return node_input
 
 # Define the root workflow agent that chains the agents sequentially with intermediate spacing delays
@@ -47,7 +111,11 @@ root_agent = Workflow(
     name="root_agent",
     edges=[
         ("START", intake_agent),
-        (intake_agent, delay_prakriti),
+        (intake_agent, intake_router),
+        (intake_router, {
+            "route_safety": safety_agent,
+            "route_prakriti": delay_prakriti
+        }),
         (delay_prakriti, prakriti_agent),
         (prakriti_agent, delay_knowledge),
         (delay_knowledge, knowledge_agent),
