@@ -45,5 +45,172 @@
         "Perform dry skin brushing (Garshana) to stimulate lymphatic flow and reduce congestion."
       ]
     }
-  }
+  },
+  "recipes": [
+    {
+      "id": "recipe_1",
+      "name": "Nourishing Mung Dal Kitchari",
+      "dosha_effect": {
+        "Vata": "Balancing",
+        "Pitta": "Balancing",
+        "Kapha": "Balancing"
+      },
+      "meal_type": "Lunch / Dinner",
+      "prep_time": "10 min",
+      "cook_time": "30 min",
+      "ingredients": [
+        "1/2 cup split yellow mung dal",
+        "1/2 cup basmati rice",
+        "1 tbsp ghee",
+        "1/2 tsp cumin seeds",
+        "1/2 tsp mustard seeds",
+        "1/2 tsp turmeric powder",
+        "1/2 tsp grated ginger",
+        "4 cups water",
+        "Pinch of salt and fresh cilantro"
+      ],
+      "instructions": [
+        "Wash and rinse the mung dal and rice thoroughly until the water runs clear.",
+        "In a medium pot, heat ghee on medium. Add cumin and mustard seeds; sauté until they pop.",
+        "Add turmeric and grated ginger, then add the mung dal and rice, stirring to coat.",
+        "Pour in the water, bring to a boil, then cover and simmer on low for 30 minutes until soft.",
+        "Serve warm, garnished with a pinch of salt and fresh cilantro."
+      ],
+      "description": "A classic, easily digestible one-pot dish that cleanses the digestive tract and balances all three doshas."
+    },
+    {
+      "id": "recipe_2",
+      "name": "Cooling Coconut Rice Pudding",
+      "dosha_effect": {
+        "Vata": "Balancing",
+        "Pitta": "Balancing",
+        "Kapha": "Aggravating"
+      },
+      "meal_type": "Breakfast / Dessert",
+      "prep_time": "5 min",
+      "cook_time": "25 min",
+      "ingredients": [
+        "1/2 cup basmati rice",
+        "1 cup coconut milk",
+        "2 cups water",
+        "2 tbsp maple syrup or raw sugar",
+        "1/4 tsp cardamom powder",
+        "1 tbsp unsalted shredded coconut"
+      ],
+      "instructions": [
+        "Combine rice and water in a saucepan, bring to a boil, then simmer covered on low for 15 minutes.",
+        "Stir in the coconut milk, maple syrup, and cardamom powder.",
+        "Simmer uncovered on low heat for another 10 minutes, stirring occasionally until thick.",
+        "Garnish with shredded coconut and serve warm or at room temperature."
+      ],
+      "description": "A sweet, heavy, and cooling pudding that pacifies Pitta heat and grounds Vata dryness, but can increase Kapha heaviness."
+    },
+    {
+      "id": "recipe_3",
+      "name": "Warm Spiced Oatmeal",
+      "dosha_effect": {
+        "Vata": "Balancing",
+        "Pitta": "Aggravating",
+        "Kapha": "Balancing"
+      },
+      "meal_type": "Breakfast",
+      "prep_time": "5 min",
+      "cook_time": "10 min",
+      "ingredients": [
+        "1/2 cup rolled oats",
+        "1 cup water",
+        "1/2 cup almond milk",
+        "1/4 tsp cinnamon powder",
+        "Pinch of nutmeg",
+        "1 tsp honey (add after cooking)"
+      ],
+      "instructions": [
+        "Bring water and oats to a gentle boil in a small pot.",
+        "Reduce heat to low, cover, and cook for 5 minutes until soft.",
+        "Stir in the almond milk, cinnamon, and nutmeg; simmer for 2 minutes.",
+        "Remove from heat, let cool slightly, then stir in honey before serving."
+      ],
+      "description": "A comforting, warm breakfast that stabilizes Vata and clears Kapha congestion. Slightly heating for Pitta."
+    },
+    {
+      "id": "recipe_4",
+      "name": "Light Barley & Vegetable Soup",
+      "dosha_effect": {
+        "Vata": "Aggravating",
+        "Pitta": "Balancing",
+        "Kapha": "Balancing"
+      },
+      "meal_type": "Lunch / Dinner",
+      "prep_time": "15 min",
+      "cook_time": "40 min",
+      "ingredients": [
+        "1/2 cup pearl barley",
+        "1 cup chopped mixed vegetables (carrots, celery, zucchini)",
+        "4 cups vegetable broth",
+        "1 tsp ghee or olive oil",
+        "1/2 tsp cumin powder",
+        "1/2 tsp fennel powder",
+        "Fresh parsley"
+      ],
+      "instructions": [
+        "Heat olive oil or ghee in a large pot on medium heat. Sauté cumin and fennel powders for 30 seconds.",
+        "Add chopped vegetables and barley; stir to combine.",
+        "Pour in the vegetable broth and bring to a boil.",
+        "Reduce heat to low, cover, and simmer for 40 minutes until barley is tender.",
+        "Garnish with fresh parsley and serve warm."
+      ],
+      "description": "A light, drying, and cooling soup that is excellent for reducing Kapha congestion and cooling Pitta heat. Too drying for Vata."
+    },
+    {
+      "id": "recipe_5",
+      "name": "Calming Golden Milk",
+      "dosha_effect": {
+        "Vata": "Balancing",
+        "Pitta": "Balancing",
+        "Kapha": "Balancing"
+      },
+      "meal_type": "Drinks",
+      "prep_time": "2 min",
+      "cook_time": "5 min",
+      "ingredients": [
+        "1 cup whole milk or oat milk",
+        "1/2 tsp turmeric powder",
+        "1/4 tsp cardamom powder",
+        "Pinch of black pepper (helps turmeric absorption)",
+        "1/2 tsp ghee",
+        "1 tsp maple syrup"
+      ],
+      "instructions": [
+        "Combine milk, turmeric, cardamom, black pepper, and ghee in a small saucepan.",
+        "Bring to a gentle simmer over medium-low heat, stirring frequently for 5 minutes (do not boil).",
+        "Remove from heat, pour into a mug, stir in maple syrup, and drink warm before bed."
+      ],
+      "description": "A deeply soothing, sleep-promoting drink that reduces systemic inflammation and supports joint and immune health."
+    },
+    {
+      "id": "recipe_6",
+      "name": "Zesty Ginger-Lemon Tea",
+      "dosha_effect": {
+        "Vata": "Balancing",
+        "Pitta": "Aggravating",
+        "Kapha": "Balancing"
+      },
+      "meal_type": "Drinks",
+      "prep_time": "3 min",
+      "cook_time": "10 min",
+      "ingredients": [
+        "2 cups water",
+        "1 inch fresh ginger root, sliced",
+        "1 tbsp fresh lemon juice",
+        "1 tsp honey (add after cooking)"
+      ],
+      "instructions": [
+        "Bring water and sliced ginger root to a boil in a small pot.",
+        "Reduce heat and simmer gently for 10 minutes to extract the ginger flavor.",
+        "Strain into a cup, add lemon juice, and let cool slightly.",
+        "Stir in honey and enjoy warm."
+      ],
+      "description": "An invigorating, warming drink that stimulates digestive fire (Agni), clears toxins (Ama), and reduces Vata/Kapha coldness."
+    }
+  ]
 }
