@@ -56,6 +56,14 @@ function App() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
+  const [showPreloader, setShowPreloader] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowPreloader(false);
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, []);
   
   const [doshaState, setDoshaState] = useState(null);
 
@@ -554,21 +562,28 @@ function App() {
     return currentDoshaState.dominant_dosha.toLowerCase().includes(doshaName.toLowerCase());
   };
 
-  if (!token) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
-  }
-
-  if (initialLoading) {
+  if (showPreloader || initialLoading) {
     return (
-      <div className="loading-screen">
-        <div className="dot-pulse">
-          <div className="dot"></div>
-          <div className="dot"></div>
-          <div className="dot"></div>
+      <div className="preloader-container">
+        <div className="preloader-content">
+          <div className="preloader-logo-container">
+            <div className="preloader-spark">✨</div>
+            <h2 className="preloader-title">PranaAI</h2>
+            <p className="preloader-subtitle">Your Personalized Ayurvedic Concierge</p>
+          </div>
+          <div className="preloader-progress-bar">
+            <div className="preloader-progress-fill"></div>
+          </div>
+          <p className="preloader-status">
+            {initialLoading ? "Restoring your wellness profile..." : "Initializing wellness engine..."}
+          </p>
         </div>
-        <p style={{ marginTop: '16px', color: 'var(--text-muted)' }}>Restoring your wellness profile...</p>
       </div>
     );
+  }
+
+  if (!token) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (

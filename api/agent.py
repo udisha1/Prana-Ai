@@ -645,7 +645,7 @@ def archive_current_consultation():
     username = g.username
     session_data = database.get_user_session(username)
     if not session_data:
-        return jsonify({"error": "No active session found."}), 404
+        return jsonify({"error": "No completed consultation to archive. Complete the intake first."}), 400
         
     chat_history = session_data.get("chat_history", [])
     dosha_state = session_data.get("dosha_state")
