@@ -50,7 +50,13 @@ function Login({ onLoginSuccess }) {
         }),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data = {};
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (jsonErr) {
+        throw new Error(`Server error: ${responseText.substring(0, 200)}`);
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Authentication failed.');

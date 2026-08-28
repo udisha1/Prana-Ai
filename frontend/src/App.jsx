@@ -26,18 +26,20 @@ const getDietGuideline = (dosha) => {
 };
 
 const getDominantEffect = (recipe, dominantDosha) => {
-  if (!dominantDosha) return "Neutral";
+  // FIX: Added safeguard in case recipe or dosha_effect is undefined from the API
+  if (!dominantDosha || !recipe || !recipe.dosha_effect) return "Neutral";
+  
   let effects = [];
-  if (dominantDosha.toLowerCase().includes("vata")) {
+  if (dominantDosha.toLowerCase().includes("vata") && recipe.dosha_effect.Vata) {
     effects.push(`Vata: ${recipe.dosha_effect.Vata}`);
   }
-  if (dominantDosha.toLowerCase().includes("pitta")) {
+  if (dominantDosha.toLowerCase().includes("pitta") && recipe.dosha_effect.Pitta) {
     effects.push(`Pitta: ${recipe.dosha_effect.Pitta}`);
   }
-  if (dominantDosha.toLowerCase().includes("kapha")) {
+  if (dominantDosha.toLowerCase().includes("kapha") && recipe.dosha_effect.Kapha) {
     effects.push(`Kapha: ${recipe.dosha_effect.Kapha}`);
   }
-  return effects.join(" | ");
+  return effects.length > 0 ? effects.join(" | ") : "Neutral";
 };
 
 function App() {
@@ -55,11 +57,9 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
   
-  // Dosha state: Vata, Pitta, Kapha breakdown
   const [doshaState, setDoshaState] = useState(null);
 
-  // Tracker state variables
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'tracker'
+  const [activeTab, setActiveTab] = useState('chat');
   const [trackerDate, setTrackerDate] = useState(() => {
     const today = new Date();
     const year = today.getFullYear();
@@ -71,14 +71,12 @@ function App() {
   const [trackerLoading, setTrackerLoading] = useState(false);
   const [trackerError, setTrackerError] = useState(null);
 
-  // Diet state variables
   const [recipes, setRecipes] = useState([]);
   const [loggedMeals, setLoggedMeals] = useState([]);
   const [dietLoading, setDietLoading] = useState(false);
   const [dietError, setDietError] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
 
-  // Consultation history state variables
   const [archivedConsultations, setArchivedConsultations] = useState([]);
   const [selectedArchivedId, setSelectedArchivedId] = useState(null);
   
@@ -97,9 +95,8 @@ function App() {
         handleLogoutLocal();
         return;
       }
-      if (!response.ok) {
-        throw new Error("Failed to fetch consultations");
-      }
+      if (!response.ok) throw new Error("Failed to fetch consultations");
+      
       const data = await response.json();
       setArchivedConsultations(data.consultations || []);
     } catch (err) {
@@ -129,8 +126,8 @@ function App() {
         throw new Error(data.error || "Failed to archive consultation");
       }
       const data = await response.json();
-      setArchivedConsultations(data.consultations);
-      setMessages(data.active_chat_history);
+      setArchivedConsultations(data.consultations || []);
+      setMessages(data.active_chat_history || []);
       setDoshaState(null);
       setSelectedArchivedId(null);
       alert("Consultation archived successfully! Starting a new active session.");
@@ -157,17 +154,17 @@ function App() {
         handleLogoutLocal();
         return;
       }
-      if (!response.ok) {
-        throw new Error("Failed to fetch diet data");
-      }
+      if (!response.ok) throw new Error("Failed to fetch diet data");
+      
       const data = await response.json();
       if (data.no_profile) {
         setDietError(data.error);
         setRecipes([]);
         setLoggedMeals([]);
       } else {
-        setRecipes(data.recipes);
-        setLoggedMeals(data.logged_meals);
+        // FIX: Ensure fallbacks to empty arrays
+        setRecipes(data.recipes || []);
+        setLoggedMeals(data.logged_meals || []);
       }
     } catch (err) {
       console.error("Error fetching diet data:", err);
@@ -187,7 +184,7 @@ function App() {
       logged_at: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })
     };
     
-    setLoggedMeals(prev => [...prev, mockEntry]);
+    setLoggedMeals(prev => [...(prev || []), mockEntry]);
     setSelectedRecipe(null);
     
     const API_URL = import.meta.env.VITE_API_URL || '';
@@ -208,11 +205,10 @@ function App() {
         handleLogoutLocal();
         return;
       }
-      if (!response.ok) {
-        throw new Error("Failed to log meal");
-      }
+      if (!response.ok) throw new Error("Failed to log meal");
+      
       const data = await response.json();
-      setLoggedMeals(data.logged_meals);
+      setLoggedMeals(data.logged_meals || []);
     } catch (err) {
       console.error("Error logging meal:", err);
       fetchDietData(trackerDate);
@@ -234,15 +230,14 @@ function App() {
         handleLogoutLocal();
         return;
       }
-      if (!response.ok) {
-        throw new Error("Failed to fetch tracker data");
-      }
+      if (!response.ok) throw new Error("Failed to fetch tracker data");
+      
       const data = await response.json();
       if (data.no_profile) {
         setTrackerError(data.error);
         setTrackerData(null);
       } else {
-        setTrackerData(data.tracker);
+        setTrackerData(data.tracker || null);
       }
     } catch (err) {
       console.error("Error fetching tracker data:", err);
@@ -253,9 +248,8 @@ function App() {
   };
 
   const handleToggleTask = async (taskIndex) => {
-    if (!token || !trackerData) return;
+    if (!token || !trackerData || !trackerData.tasks) return;
     
-    // Optimistic UI update
     const updatedTasks = [...trackerData.tasks];
     updatedTasks[taskIndex] = {
       ...updatedTasks[taskIndex],
@@ -284,9 +278,8 @@ function App() {
         handleLogoutLocal();
         return;
       }
-      if (!response.ok) {
-        throw new Error("Failed to toggle task");
-      }
+      if (!response.ok) throw new Error("Failed to toggle task");
+      
       const data = await response.json();
       setTrackerData(data.tracker);
     } catch (err) {
@@ -313,15 +306,11 @@ function App() {
       if (isNaN(d.getTime())) return dateStr;
       
       const today = new Date();
-      if (d.toDateString() === today.toDateString()) {
-        return "Today";
-      }
+      if (d.toDateString() === today.toDateString()) return "Today";
       
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      if (d.toDateString() === yesterday.toDateString()) {
-        return "Yesterday";
-      }
+      if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
       
       return d.toLocaleDateString(undefined, { 
         weekday: 'short', 
@@ -334,7 +323,6 @@ function App() {
     }
   };
 
-  // Auto scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -343,7 +331,6 @@ function App() {
     scrollToBottom();
   }, [messages, loading]);
 
-  // Load chat history when token changes or on mount
   useEffect(() => {
     if (token) {
       fetchChatHistory();
@@ -351,14 +338,12 @@ function App() {
     }
   }, [token]);
 
-  // Load tracker data when tab, date, or token changes
   useEffect(() => {
     if (token && activeTab === 'tracker') {
       fetchTrackerData(trackerDate);
     }
   }, [token, trackerDate, activeTab, doshaState]);
 
-  // Load diet data when tab, date, or token changes
   useEffect(() => {
     if (token && activeTab === 'diet') {
       fetchDietData(trackerDate);
@@ -378,18 +363,13 @@ function App() {
         handleLogoutLocal();
         return;
       }
-      if (!response.ok) {
-        throw new Error("Failed to load chat history");
-      }
+      if (!response.ok) throw new Error("Failed to load chat history");
+      
       const data = await response.json();
       if (data.chat_history && data.chat_history.length > 0) {
         setMessages(data.chat_history);
       }
-      if (data.dosha_state) {
-        setDoshaState(data.dosha_state);
-      } else {
-        setDoshaState(null);
-      }
+      setDoshaState(data.dosha_state || null);
     } catch (err) {
       console.error("Error loading chat history:", err);
     } finally {
@@ -459,9 +439,8 @@ function App() {
         handleLogoutLocal();
         return;
       }
-      if (!response.ok) {
-        throw new Error("Failed to clear chat");
-      }
+      if (!response.ok) throw new Error("Failed to clear chat");
+      
       setMessages([
         {
           text: "Hello! I am your Ayurcare Agent. To guide you, I will collect some details about your symptoms and lifestyle.\n\nTo begin, what main symptoms are you experiencing today?",
@@ -511,9 +490,7 @@ function App() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          message: userMessage
-        })
+        body: JSON.stringify({ message: userMessage })
       });
 
       if (response.status === 401) {
@@ -521,12 +498,9 @@ function App() {
         return;
       }
 
-      if (!response.ok) {
-        throw new Error("Failed to contact the wellness assistant");
-      }
+      if (!response.ok) throw new Error("Failed to contact the wellness assistant");
 
       const data = await response.json();
-      
       const isSafetyWarning = data.reply.includes("SAFETY WARNING:") || data.reply.includes("emergency care") || data.reply.includes("see a doctor");
 
       setMessages((prev) => [...prev, {
@@ -550,24 +524,21 @@ function App() {
     }
   };
 
-  // Helper to map dosha strength from Prakriti JSON to percentage heights
   const getDoshaHeight = (doshaName) => {
     const activeArchive = selectedArchivedId ? archivedConsultations.find(c => c.id === selectedArchivedId) : null;
     const currentDoshaState = activeArchive ? activeArchive.dosha_state : doshaState;
 
     if (!currentDoshaState || !currentDoshaState.constitution_breakdown) {
-      return '15%'; // Default resting/breathing height
+      return '15%'; 
     }
     const val = currentDoshaState.constitution_breakdown[doshaName];
     if (!val) return '15%';
     
-    // Support either descriptive tags (High/Medium/Low) or quantitative values
     const stringVal = String(val).toLowerCase();
     if (stringVal.includes('high') || stringVal === 'h') return '95%';
     if (stringVal.includes('medium') || stringVal === 'med' || stringVal === 'm') return '60%';
     if (stringVal.includes('low') || stringVal === 'l') return '25%';
     
-    // Support raw numbers or percentages
     const numVal = parseInt(stringVal);
     if (!isNaN(numVal)) {
       return `${Math.min(Math.max(numVal, 15), 100)}%`;
@@ -602,27 +573,21 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Signature Vertical Pulse Bars Panel */}
       <div className="pulse-bars-panel">
         <div className="panel-title">Constitutional Pulse</div>
         <div className="bars-container">
-          {/* Vata Bar */}
           <div className="pulse-bar-wrapper vata">
             <div className="pulse-bar-track">
               <div className="pulse-bar-fill" style={{ height: getDoshaHeight('Vata') }}></div>
             </div>
             <div className={`pulse-bar-label ${isDoshaActive('Vata') ? 'active' : ''}`}>Vata</div>
           </div>
-
-          {/* Pitta Bar */}
           <div className="pulse-bar-wrapper pitta">
             <div className="pulse-bar-track">
               <div className="pulse-bar-fill" style={{ height: getDoshaHeight('Pitta') }}></div>
             </div>
             <div className={`pulse-bar-label ${isDoshaActive('Pitta') ? 'active' : ''}`}>Pitta</div>
           </div>
-
-          {/* Kapha Bar */}
           <div className="pulse-bar-wrapper kapha">
             <div className="pulse-bar-track">
               <div className="pulse-bar-fill" style={{ height: getDoshaHeight('Kapha') }}></div>
@@ -632,7 +597,6 @@ function App() {
         </div>
       </div>
 
-      {/* Main Chat Interface */}
       <div className="main-chat-container">
         <div className="header">
           <div>
@@ -658,7 +622,6 @@ function App() {
           </div>
         </div>
 
-        {/* Tab Navigation Menu */}
         <div className="tab-navigation">
           <button 
             className={`tab-button ${activeTab === 'chat' ? 'active' : ''}`}
@@ -817,7 +780,7 @@ function App() {
                 </div>
                 <p>Loading your routine...</p>
               </div>
-            ) : trackerData ? (
+            ) : trackerData && trackerData.tasks ? (
               <div className="tracker-content">
                 <div className="tracker-meta-header">
                   <span className="dosha-badge">{trackerData.dominant_dosha} Balancing Routine</span>
@@ -831,11 +794,11 @@ function App() {
                 
                 <div className="tracker-dashboard">
                   <div className="streak-card current">
-                    <div className="streak-value">🔥 {trackerData.streak_count}</div>
+                    <div className="streak-value">🔥 {trackerData.streak_count || 0}</div>
                     <div className="streak-label">Current Streak</div>
                   </div>
                   <div className="streak-card longest">
-                    <div className="streak-value">⭐ {trackerData.longest_streak}</div>
+                    <div className="streak-value">⭐ {trackerData.longest_streak || 0}</div>
                     <div className="streak-label">Longest Streak</div>
                   </div>
                 </div>
@@ -862,12 +825,12 @@ function App() {
                   <div className="tasks-checkbox-list">
                     {trackerData.tasks.map((task, idx) => (
                       <label 
-                        key={task.id} 
+                        key={task.id || idx} 
                         className={`task-checkbox-item ${task.completed ? 'completed' : ''}`}
                       >
                         <input
                           type="checkbox"
-                          checked={task.completed}
+                          checked={!!task.completed}
                           onChange={() => handleToggleTask(idx)}
                           disabled={trackerLoading}
                         />
@@ -970,7 +933,6 @@ function App() {
               </div>
             )}
 
-            {/* Recipe Details Modal */}
             {selectedRecipe && (
               <div className="recipe-modal-overlay" onClick={() => setSelectedRecipe(null)}>
                 <div className="recipe-modal-card" onClick={e => e.stopPropagation()}>
@@ -991,7 +953,7 @@ function App() {
                     <div className="recipe-modal-ingredients">
                       <h3>Ingredients</h3>
                       <ul>
-                        {selectedRecipe.ingredients.map((ing, idx) => (
+                        {(selectedRecipe.ingredients || []).map((ing, idx) => (
                           <li key={idx}>{ing}</li>
                         ))}
                       </ul>
@@ -1000,7 +962,7 @@ function App() {
                     <div className="recipe-modal-instructions">
                       <h3>Instructions</h3>
                       <ol>
-                        {selectedRecipe.instructions.map((step, idx) => (
+                        {(selectedRecipe.instructions || []).map((step, idx) => (
                           <li key={idx}>{step}</li>
                         ))}
                       </ol>
