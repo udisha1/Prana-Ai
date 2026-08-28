@@ -28,7 +28,11 @@ def init_db():
         logger.info("Successfully connected to MongoDB.")
         
         # Ensure collections and indexes are created
-        db = _mongo_client.get_default_database()
+        try:
+            db = _mongo_client.get_default_database()
+        except Exception:
+            db = _mongo_client["prana_ai"]
+            
         db.users.create_index("username", unique=True)
         db.tokens.create_index("token", unique=True)
         _use_fallback = False
@@ -44,17 +48,23 @@ def get_db():
         return None
     try:
         return _mongo_client.get_default_database()
-    except Exception as e:
-        logger.error(f"Error accessing database: {e}. Switching to in-memory mode.")
-        return None
+    except Exception:
+        try:
+            return _mongo_client["prana_ai"]
+        except Exception as e:
+            logger.error(f"Error accessing database: {e}. Switching to in-memory mode.")
+            return None
 
 def register_user(username, password):
     username = username.strip().lower()
     if not username or not password:
         return False, "Username and password are required"
+        
+    db = get_db()
+    if db is None and os.environ.get("VERCEL") == "1":
+        return False, "Database connection is missing. Please configure MONGO_URI in your Vercel project settings to enable user registration."
     
     password_hash = generate_password_hash(password)
-    db = get_db()
     
     if db is not None:
         try:
@@ -86,8 +96,11 @@ def authenticate_user(username, password):
     username = username.strip().lower()
     if not username or not password:
         return False, "Username and password are required"
-    
+        
     db = get_db()
+    if db is None and os.environ.get("VERCEL") == "1":
+        return False, "Database connection is missing. Please configure MONGO_URI in your Vercel project settings to enable login."
+        
     user = None
     
     if db is not None:
