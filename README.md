@@ -77,59 +77,6 @@ PranaAI is powered by a sequential multi-agent pipeline built on top of the Goog
 🌐 **Live Demo Link:** `ayurcare-agent.vercel.app`
 
 ---
-
-## 6. Local Setup Instructions
-
-Follow these simple steps to run the frontend and backend servers locally:
-
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-
-### Step 1: Clone the Repository
-```bash
-git clone https://github.com/udisha1/ayurcare-agent.git
-cd ayurcare-agent
-```
-
-### Step 2: Configure Environment Variables
-Create a `.env` file in the root directory:
-```env
-GOOGLE_API_KEY=your_gemini_api_key_here
-```
-
-### Step 3: Install Backend Dependencies & Run
-1. Create and activate a Python virtual environment:
-   ```bash
-   python -m venv venv
-   # On Windows:
-   .\venv\Scripts\activate
-   # On macOS/Linux:
-   source venv/bin/activate
-   ```
-2. Install the required libraries:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run the Flask server:
-   ```bash
-   python api/agent.py
-   ```
-   *The backend will start on `http://127.0.0.1:5000`*
-
-### Step 4: Install Frontend Dependencies & Run
-1. Open a new terminal window/tab and navigate to the `frontend/` folder:
-   ```bash
-   cd frontend
-   ```
-2. Install Node packages:
-   ```bash
-   npm install
-   ```
-3. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
    *The frontend will start on `http://localhost:5173/`.*
 
 ### Step 5: Test the Integration
