@@ -77,7 +77,3 @@ PranaAI is powered by a sequential multi-agent pipeline built on top of the Goog
 🌐 **Live Demo Link:** `ayurcare-agent.vercel.app`
 
 ---
-   *The frontend will start on `http://localhost:5173/`.*
-
-### Step 5: Test the Integration
-Open your browser and navigate to `http://localhost:5173/` to interact with your local instance of PranaAI.
