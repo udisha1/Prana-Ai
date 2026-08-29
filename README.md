@@ -74,7 +74,7 @@ PranaAI is powered by a sequential multi-agent pipeline built on top of the Goog
 
 ## 5. Live Demo
 
-🌐 **Live Demo Link:** `[Live Demo Link Here]`
+🌐 **Live Demo Link:** `ayurcare-agent.vercel.app`
 
 ---
 
@@ -115,7 +115,7 @@ GOOGLE_API_KEY=your_gemini_api_key_here
    ```bash
    python api/agent.py
    ```
-   *The backend will start on `http://127.0.0.1:5000`.*
+   *The backend will start on `http://127.0.0.1:5000`*
 
 ### Step 4: Install Frontend Dependencies & Run
 1. Open a new terminal window/tab and navigate to the `frontend/` folder:
